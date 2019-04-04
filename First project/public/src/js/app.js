@@ -1,9 +1,10 @@
+navigator.serviceWorker.register('../../sw.js');
+
 const button = document.querySelector('button');
+const title = document.querySelector('.title');
+const courseFeatureElements = document.querySelectorAll('.course-feature');
 
 function animate() {
-  const title = document.querySelector('.title');
-  const courseFeatureElements = document.querySelectorAll('.course-feature');
-
   title.classList.remove('animate-in');
   for (let element of courseFeatureElements) {
     element.classList.remove('animate-in');
@@ -22,5 +23,4 @@ function animate() {
 }
 
 animate();
-
 button.addEventListener('click', animate);
