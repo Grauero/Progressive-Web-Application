@@ -30,10 +30,18 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // check if item already in cache and return it or make http request
+  // check if asset already in cache and return it or make http request
   e.respondWith(
-    caches
-      .match(e.request)
-      .then(response => (response ? response : fetch(e.request)))
+    caches.match(e.request).then(async response => {
+      // return asset from cache
+      if (response) return response;
+
+      // make http request and store it in cache
+      const res = await fetch(e.request);
+      const cache = await caches.open('dynamic');
+      cache.put(e.request.url, res.clone());
+
+      return res;
+    })
   );
 });
