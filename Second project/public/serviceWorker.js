@@ -1,10 +1,39 @@
 /* eslint-disable no-console */
 
-self.addEventListener('install', e => console.log('[SW] Install event', e));
+self.addEventListener('install', e => {
+  console.log('[SW] Install event', e);
+
+  // create cache and store static assets
+  e.waitUntil(
+    caches.open('static').then(cache => {
+      console.log('[SW] Precaching static app shell');
+      cache.addAll([
+        '/',
+        '/index.html',
+        '/src/js/app.js',
+        '/src/js/feed.js',
+        '/src/js/material.min.js',
+        '/src/css/app.css',
+        '/src/css/feed.css',
+        '/src/images/main-image.jpg',
+        'https://fonts.googleapis.com/css?family=Roboto:400,700',
+        'https://fonts.googleapis.com/icon?family=Material+Icons',
+        'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css'
+      ]);
+    })
+  );
+});
 
 self.addEventListener('activate', e => {
   console.log('[SW] Activate event', e);
   return self.clients.claim();
 });
 
-self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));
+self.addEventListener('fetch', e => {
+  // check if item already in cache and return it or make http request
+  e.respondWith(
+    caches
+      .match(e.request)
+      .then(response => (response ? response : fetch(e.request)))
+  );
+});
