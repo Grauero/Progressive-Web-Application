@@ -1,11 +1,15 @@
 /* eslint-disable no-console */
 
+// update constants when cached assets get changed
+const CACHE_STATIC_NAME = 'static-v2';
+const CACHE_DYNAMIC_NAME = 'dynamic-v2';
+
 self.addEventListener('install', e => {
   console.log('[SW] Install event', e);
 
   // create cache and store static assets
   e.waitUntil(
-    caches.open('static').then(cache => {
+    caches.open(CACHE_STATIC_NAME).then(cache => {
       console.log('[SW] Precaching static app shell');
       cache.addAll([
         '/',
@@ -26,6 +30,21 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   console.log('[SW] Activate event', e);
+
+  e.waitUntil(
+    caches.keys().then(keyList => {
+      const keyListPromises = keyList.map(key => {
+        // removing outdated caches
+        if (key !== CACHE_STATIC_NAME && key !== CACHE_DYNAMIC_NAME) {
+          console.log('[SW] Removing old cache', key);
+          return caches.delete(key);
+        }
+      });
+
+      return Promise.all(keyListPromises);
+    })
+  );
+
   return self.clients.claim();
 });
 
@@ -38,7 +57,7 @@ self.addEventListener('fetch', e => {
 
       // make http request and store it in cache
       const res = await fetch(e.request);
-      const cache = await caches.open('dynamic');
+      const cache = await caches.open(CACHE_DYNAMIC_NAME);
       cache.put(e.request.url, res.clone());
 
       return res;
