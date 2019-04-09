@@ -14,6 +14,7 @@ self.addEventListener('install', e => {
       cache.addAll([
         '/',
         '/index.html',
+        '/offline.html',
         '/src/js/app.js',
         '/src/js/feed.js',
         '/src/js/material.min.js',
@@ -56,11 +57,18 @@ self.addEventListener('fetch', e => {
       if (response) return response;
 
       // make http request and store it in cache
-      const res = await fetch(e.request);
-      const cache = await caches.open(CACHE_DYNAMIC_NAME);
-      cache.put(e.request.url, res.clone());
+      try {
+        const res = await fetch(e.request);
+        const cache = await caches.open(CACHE_DYNAMIC_NAME);
+        cache.put(e.request.url, res.clone());
 
-      return res;
+        return res;
+      } catch (err) {
+        // load fallback page
+        const cache = await caches.open(CACHE_STATIC_NAME);
+
+        return cache.match('/offline.html');
+      }
     })
   );
 });

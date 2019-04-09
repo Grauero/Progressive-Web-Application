@@ -31,6 +31,16 @@ function closeCreatePostModal() {
   createPostArea.style.display = 'none';
 }
 
+// function for caching assets on demand
+// async function onSaveButtonClick(e) {
+//   if ('caches' in window) {
+//     const cache = await caches.open('user-requested');
+
+//     cache.add('https://httpbin.org/get');
+//     cache.add('/src/images/sf-boat.jpg');
+//   }
+// }
+
 //generate dummy data
 function createCard() {
   const cardTitleTextElement = document.createElement('h2');
@@ -44,10 +54,15 @@ function createCard() {
   cardTitle.style.height = '180px';
   cardTitle.appendChild(cardTitleTextElement);
 
+  // const cardSaveButton = document.createElement('button');
+  // cardSaveButton.textContent = 'Save';
+  // cardSaveButton.addEventListener('click', onSaveButtonClick);
+
   const cardSupportingText = document.createElement('div');
   cardSupportingText.className = 'mdl-card__supporting-text';
   cardSupportingText.textContent = 'In San Francisco';
   cardSupportingText.style.textAlign = 'center';
+  // cardSupportingText.appendChild(cardSaveButton);
 
   const cardWrapper = document.createElement('div');
   cardWrapper.className = 'shared-moment-card mdl-card mdl-shadow--2dp';
