@@ -31,6 +31,12 @@ function closeCreatePostModal() {
   createPostArea.style.display = 'none';
 }
 
+function clearCards() {
+  while (sharedMomentsArea.hasChildNodes()) {
+    sharedMomentsArea.removeChild(sharedMomentsArea.lastChild);
+  }
+}
+
 // function for caching assets on demand
 // async function onSaveButtonClick(e) {
 //   if ('caches' in window) {
@@ -73,9 +79,35 @@ function createCard() {
   sharedMomentsArea.appendChild(cardWrapper);
 }
 
-fetch('https://httpbin.org/get')
-  .then(res => res.json())
-  .then(createCard);
+// simualte network request
+(async function() {
+  const URL = 'https://httpbin.org/get';
+  let networkDataReceived = false;
+
+  // http request
+  const res = await fetch(URL);
+  const data = await res.json();
+  networkDataReceived = true;
+
+  clearCards();
+  createCard();
+  console.log('Data from network', data);
+
+  // cache request
+  if ('caches' in window) {
+    const response = await caches.match(URL);
+
+    if (response) {
+      const data = await response.json();
+
+      if (!networkDataReceived) {
+        clearCards();
+        createCard();
+      }
+      console.log('Data from cache', data);
+    }
+  }
+})();
 
 shareImageButton.addEventListener('click', openCreatePostModal);
 closeCreatePostModalButton.addEventListener('click', closeCreatePostModal);

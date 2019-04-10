@@ -50,6 +50,19 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  const URL = 'https://httpbin.org/get';
+
+  if (e.request.url.includes(URL)) {
+    e.respondWith(
+      caches.open(CACHE_DYNAMIC_NAME).then(async cache => {
+        const response = await fetch(e.request);
+        cache.put(e.request, response.clone());
+
+        return response;
+      })
+    );
+  }
+
   // check if asset already in cache and return it or make http request
   e.respondWith(
     caches.match(e.request).then(async response => {
