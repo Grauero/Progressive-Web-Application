@@ -1,8 +1,18 @@
-/* eslint-disable no-console */
+/* eslint-disable no-unused-vars, no-console */
 
 // update constants when cached assets get changed
-const CACHE_STATIC_NAME = 'static-v2';
-const CACHE_DYNAMIC_NAME = 'dynamic-v2';
+const CACHE_STATIC_NAME = 'static-v3';
+const CACHE_DYNAMIC_NAME = 'dynamic-v3';
+
+async function trimCache(cacheName, maxSize) {
+  const cache = await caches.open(cacheName);
+  const keysInCache = await cache.keys();
+
+  if (keysInCache.length > maxSize) {
+    cache.delete(keysInCache[0]);
+    trimCache(cacheName, maxSize);
+  }
+}
 
 self.addEventListener('install', e => {
   console.log('[SW] Install event', e);
@@ -80,7 +90,9 @@ self.addEventListener('fetch', e => {
         // load fallback page
         const cache = await caches.open(CACHE_STATIC_NAME);
 
-        return cache.match('/offline.html');
+        if (e.request.headers.get('accept').includes('/help')) {
+          return cache.match('/offline.html');
+        }
       }
     })
   );
