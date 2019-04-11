@@ -31,44 +31,23 @@ function closeCreatePostModal() {
   createPostArea.style.display = 'none';
 }
 
-function clearCards() {
-  while (sharedMomentsArea.hasChildNodes()) {
-    sharedMomentsArea.removeChild(sharedMomentsArea.lastChild);
-  }
-}
-
-// function for caching assets on demand
-// async function onSaveButtonClick(e) {
-//   if ('caches' in window) {
-//     const cache = await caches.open('user-requested');
-
-//     cache.add('https://httpbin.org/get');
-//     cache.add('/src/images/sf-boat.jpg');
-//   }
-// }
-
 //generate dummy data
-function createCard() {
+function createCard(data) {
   const cardTitleTextElement = document.createElement('h2');
   cardTitleTextElement.className = 'mdl-card__title-text';
-  cardTitleTextElement.textContent = 'San Francisco Trip';
+  cardTitleTextElement.textContent = data.title;
 
   const cardTitle = document.createElement('div');
   cardTitle.className = 'mdl-card__title';
-  cardTitle.style.backgroundImage = 'url("/src/images/sf-boat.jpg")';
+  cardTitle.style.backgroundImage = `url(${data.image})`;
   cardTitle.style.backgroundSize = 'cover';
   cardTitle.style.height = '180px';
   cardTitle.appendChild(cardTitleTextElement);
 
-  // const cardSaveButton = document.createElement('button');
-  // cardSaveButton.textContent = 'Save';
-  // cardSaveButton.addEventListener('click', onSaveButtonClick);
-
   const cardSupportingText = document.createElement('div');
   cardSupportingText.className = 'mdl-card__supporting-text';
-  cardSupportingText.textContent = 'In San Francisco';
+  cardSupportingText.textContent = data.location;
   cardSupportingText.style.textAlign = 'center';
-  // cardSupportingText.appendChild(cardSaveButton);
 
   const cardWrapper = document.createElement('div');
   cardWrapper.className = 'shared-moment-card mdl-card mdl-shadow--2dp';
@@ -79,35 +58,34 @@ function createCard() {
   sharedMomentsArea.appendChild(cardWrapper);
 }
 
-// simualte network request
-(async function() {
-  const URL = 'https://httpbin.org/get';
-  let networkDataReceived = false;
+function updateUI(data) {
+  data.map(item => createCard(item));
+}
 
-  // http request
-  const res = await fetch(URL);
-  const data = await res.json();
-  networkDataReceived = true;
+const URL = 'https://progressive-web-app-a254b.firebaseio.com/posts.json';
+let networkDataReceived = false;
 
-  clearCards();
-  createCard();
-  console.log('Data from network', data);
+// data from server
+fetch(URL)
+  .then(res => res.json())
+  .then(data => {
+    networkDataReceived = true;
+    console.log('From web', data);
+    updateUI(Object.values(data));
+  });
 
-  // cache request
-  if ('caches' in window) {
-    const response = await caches.match(URL);
-
-    if (response) {
-      const data = await response.json();
-
+// data from cache
+if ('caches' in window) {
+  caches
+    .match(URL)
+    .then(response => (response ? response.json() : {}))
+    .then(data => {
+      console.log('From cache', data);
       if (!networkDataReceived) {
-        clearCards();
-        createCard();
+        updateUI(Object.values(data));
       }
-      console.log('Data from cache', data);
-    }
-  }
-})();
+    });
+}
 
 shareImageButton.addEventListener('click', openCreatePostModal);
 closeCreatePostModalButton.addEventListener('click', closeCreatePostModal);

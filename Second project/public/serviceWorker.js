@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars, no-console */
 
 // update constants when cached assets get changed
-const CACHE_STATIC_NAME = 'static-v3';
-const CACHE_DYNAMIC_NAME = 'dynamic-v3';
+const CACHE_STATIC_NAME = 'static-v4';
+const CACHE_DYNAMIC_NAME = 'dynamic-v4';
 
 async function trimCache(cacheName, maxSize) {
   const cache = await caches.open(cacheName);
