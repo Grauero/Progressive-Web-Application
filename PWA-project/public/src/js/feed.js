@@ -75,16 +75,13 @@ fetch(URL)
   });
 
 // data from cache
-if ('caches' in window) {
-  caches
-    .match(URL)
-    .then(response => (response ? response.json() : {}))
-    .then(data => {
-      console.log('From cache', data);
-      if (!networkDataReceived) {
-        updateUI(Object.values(data));
-      }
-    });
+if ('indexedDB' in window) {
+  readAllData('posts').then(data => {
+    if (!networkDataReceived) {
+      console.log('From IDB', data);
+      updateUI(data);
+    }
+  });
 }
 
 shareImageButton.addEventListener('click', openCreatePostModal);

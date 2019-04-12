@@ -1,15 +1,11 @@
 /* eslint-disable no-unused-vars, no-undef, no-console */
 
 importScripts('/src/js/idb.js');
+importScripts('/src/js/utility.js');
 
 // update constants when cached assets get changed
 const CACHE_STATIC_NAME = 'static-v4';
 const CACHE_DYNAMIC_NAME = 'dynamic-v4';
-const dbPromise = idb.open('posts-store', 1, db => {
-  if (!db.objectStoreNames.contains('posts')) {
-    db.createObjectStore('posts', { keyPath: 'id' });
-  }
-});
 
 async function trimCache(cacheName, maxSize) {
   const cache = await caches.open(cacheName);
@@ -71,22 +67,19 @@ self.addEventListener('fetch', e => {
   const URL = 'https://progressive-web-app-a254b.firebaseio.com/posts';
 
   if (e.request.url.includes(URL)) {
+    // clear and update IDB
     e.respondWith(
       fetch(e.request).then(response => {
-        response
-          .clone()
-          .json()
-          .then(data => {
-            for (let key in data) {
-              dbPromise.then(db => {
-                const transaction = db.transaction('posts', 'readwrite');
-                const store = transaction.objectStore('posts');
-                store.put(data[key]);
-
-                return transaction.complete;
-              });
-            }
-          });
+        clearAllData('posts').then(() => {
+          response
+            .clone()
+            .json()
+            .then(data => {
+              for (let key in data) {
+                writeData('posts', data[key]);
+              }
+            });
+        });
 
         return response;
       })
