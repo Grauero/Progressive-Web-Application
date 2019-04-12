@@ -1,8 +1,15 @@
-/* eslint-disable no-unused-vars, no-console */
+/* eslint-disable no-unused-vars, no-undef, no-console */
+
+importScripts('/src/js/idb.js');
 
 // update constants when cached assets get changed
 const CACHE_STATIC_NAME = 'static-v4';
 const CACHE_DYNAMIC_NAME = 'dynamic-v4';
+const dbPromise = idb.open('posts-store', 1, db => {
+  if (!db.objectStoreNames.contains('posts')) {
+    db.createObjectStore('posts', { keyPath: 'id' });
+  }
+});
 
 async function trimCache(cacheName, maxSize) {
   const cache = await caches.open(cacheName);
@@ -27,6 +34,7 @@ self.addEventListener('install', e => {
         '/offline.html',
         '/src/js/app.js',
         '/src/js/feed.js',
+        '/src/js/idb.js',
         '/src/js/material.min.js',
         '/src/css/app.css',
         '/src/css/feed.css',
@@ -60,13 +68,25 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  const URL = 'https://httpbin.org/get';
+  const URL = 'https://progressive-web-app-a254b.firebaseio.com/posts';
 
   if (e.request.url.includes(URL)) {
     e.respondWith(
-      caches.open(CACHE_DYNAMIC_NAME).then(async cache => {
-        const response = await fetch(e.request);
-        cache.put(e.request, response.clone());
+      fetch(e.request).then(response => {
+        response
+          .clone()
+          .json()
+          .then(data => {
+            for (let key in data) {
+              dbPromise.then(db => {
+                const transaction = db.transaction('posts', 'readwrite');
+                const store = transaction.objectStore('posts');
+                store.put(data[key]);
+
+                return transaction.complete;
+              });
+            }
+          });
 
         return response;
       })
