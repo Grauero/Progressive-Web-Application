@@ -8,7 +8,7 @@ const closeCreatePostModalButton = document.querySelector(
 );
 
 function openCreatePostModal() {
-  createPostArea.style.display = 'block';
+  createPostArea.style.transform = 'translateY(0)';
 
   // deferredPrompt defined in app.js
   if (deferredPrompt) {
@@ -28,7 +28,7 @@ function openCreatePostModal() {
 }
 
 function closeCreatePostModal() {
-  createPostArea.style.display = 'none';
+  createPostArea.style.transform = 'translateY(100vh)';
 }
 
 //generate dummy data
