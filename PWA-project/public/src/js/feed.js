@@ -6,6 +6,12 @@ const createPostArea = document.querySelector('#create-post');
 const closeCreatePostModalButton = document.querySelector(
   '#close-create-post-modal-btn'
 );
+const form = document.querySelector('form');
+const titleInput = document.querySelector('#title');
+const locationInput = document.querySelector('#location');
+
+const URL = 'https://progressive-web-app-a254b.firebaseio.com/posts.json';
+let networkDataReceived = false;
 
 function openCreatePostModal() {
   createPostArea.style.transform = 'translateY(0)';
@@ -29,6 +35,59 @@ function openCreatePostModal() {
 
 function closeCreatePostModal() {
   createPostArea.style.transform = 'translateY(100vh)';
+}
+
+async function sendData(e) {
+  e.preventDefault();
+  const title = titleInput.value;
+  const location = locationInput.value;
+
+  if (title.trim() !== '' && location.trim() !== '') {
+    closeCreatePostModal();
+
+    if ('serviceWorker' in navigator && 'SyncManager' in window) {
+      try {
+        const serviceWorker = await navigator.serviceWorker.ready;
+        const newPost = {
+          id: new Date().toISOString(),
+          title,
+          location
+        };
+
+        // store new post in indexed DB and register new synchronization task
+        await writeData('sync-posts', newPost);
+        serviceWorker.sync.register('sync-new-post');
+
+        // display confirmation message for user
+        const snackbarContainer = document.querySelector('#confirmation-toast');
+        const data = { message: 'Your Post was saved for synching later' };
+        snackbarContainer.MaterialSnackbar.showSnackbar(data);
+      } catch (err) {
+        console.log(err);
+      }
+    } else {
+      sendDataImmediattly();
+    }
+  }
+}
+
+async function sendDataImmediattly() {
+  const res = await fetch(URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    body: JSON.stringify({
+      id: new Date().toISOString(),
+      title: titleInput.value,
+      location: locationInput.value,
+      image: ''
+    })
+  });
+
+  console.log('Data was immediattly sent', res);
+  updateUI();
 }
 
 //generate dummy data
@@ -62,9 +121,6 @@ function updateUI(data) {
   data.map(item => createCard(item));
 }
 
-const URL = 'https://progressive-web-app-a254b.firebaseio.com/posts.json';
-let networkDataReceived = false;
-
 // data from server
 fetch(URL)
   .then(res => res.json())
@@ -86,3 +142,4 @@ if ('indexedDB' in window) {
 
 shareImageButton.addEventListener('click', openCreatePostModal);
 closeCreatePostModalButton.addEventListener('click', closeCreatePostModal);
+form.addEventListener('submit', sendData);
