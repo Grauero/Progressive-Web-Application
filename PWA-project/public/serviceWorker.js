@@ -6,6 +6,7 @@ importScripts('/src/js/utility.js');
 // update constants when cached assets get changed
 const CACHE_STATIC_NAME = 'static-v4';
 const CACHE_DYNAMIC_NAME = 'dynamic-v4';
+const URL = 'https://progressive-web-app-a254b.firebaseio.com/posts.json';
 
 async function trimCache(cacheName, maxSize) {
   const cache = await caches.open(cacheName);
@@ -64,8 +65,6 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  const URL = 'https://progressive-web-app-a254b.firebaseio.com/posts';
-
   if (e.request.url.includes(URL)) {
     // clear and update IDB
     e.respondWith(
@@ -109,4 +108,38 @@ self.addEventListener('fetch', e => {
       }
     })
   );
+});
+
+self.addEventListener('sync', e => {
+  console.log('[SW] Background synching', e);
+
+  if (e.tag === 'sync-new-posts') {
+    // read data from indexed DB and execute stored requests
+    e.waitUntil(
+      readAllData('sync-posts').then(data => {
+        for (let dataItem of data) {
+          fetch(URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json'
+            },
+            body: JSON.stringify({
+              id: dataItem.id,
+              title: dataItem.title,
+              location: dataItem.location,
+              image: 'image'
+            })
+          })
+            .then(res => {
+              if (res.ok) {
+                // clear indexed DB
+                // deleteItemFromIDB('sync-posts', dataItem.id);
+              }
+            })
+            .catch(err => console.log('Error while synching data', err));
+        }
+      })
+    );
+  }
 });

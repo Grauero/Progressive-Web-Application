@@ -46,8 +46,7 @@ async function sendData(e) {
     closeCreatePostModal();
 
     if ('serviceWorker' in navigator && 'SyncManager' in window) {
-      try {
-        const serviceWorker = await navigator.serviceWorker.ready;
+      navigator.serviceWorker.ready.then(sw => {
         const newPost = {
           id: new Date().toISOString(),
           title,
@@ -55,24 +54,26 @@ async function sendData(e) {
         };
 
         // store new post in indexed DB and register new synchronization task
-        await writeData('sync-posts', newPost);
-        serviceWorker.sync.register('sync-new-post');
-
-        // display confirmation message for user
-        const snackbarContainer = document.querySelector('#confirmation-toast');
-        const data = { message: 'Your Post was saved for synching later' };
-        snackbarContainer.MaterialSnackbar.showSnackbar(data);
-      } catch (err) {
-        console.log(err);
-      }
+        writeData('sync-posts', newPost)
+          .then(() => sw.sync.register('sync-new-posts'))
+          .then(() => {
+            // display confirmation message for user
+            const snackbarContainer = document.querySelector(
+              '#confirmation-toast'
+            );
+            const data = { message: 'Your Post was saved for synching!' };
+            snackbarContainer.MaterialSnackbar.showSnackbar(data);
+          })
+          .catch(err => console.log(err));
+      });
     } else {
       sendDataImmediattly();
     }
   }
 }
 
-async function sendDataImmediattly() {
-  const res = await fetch(URL, {
+function sendDataImmediattly() {
+  fetch(URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -84,10 +85,10 @@ async function sendDataImmediattly() {
       location: locationInput.value,
       image: ''
     })
+  }).then(function(res) {
+    console.log('Data was sent to server', res);
+    updateUI();
   });
-
-  console.log('Data was immediattly sent', res);
-  updateUI();
 }
 
 //generate dummy data
@@ -133,6 +134,7 @@ fetch(URL)
 // data from cache
 if ('indexedDB' in window) {
   readAllData('posts').then(data => {
+    console.log('data', data);
     if (!networkDataReceived) {
       console.log('From IDB', data);
       updateUI(data);
