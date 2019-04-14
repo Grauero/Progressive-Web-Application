@@ -73,19 +73,22 @@ async function sendData(e) {
 }
 
 function sendDataImmediattly() {
-  fetch(URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json'
-    },
-    body: JSON.stringify({
-      id: new Date().toISOString(),
-      title: titleInput.value,
-      location: locationInput.value,
-      image: ''
-    })
-  }).then(function(res) {
+  fetch(
+    'https://us-central1-progressive-web-app-a254b.cloudfunctions.net/storePostData',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      },
+      body: JSON.stringify({
+        id: new Date().toISOString(),
+        title: titleInput.value,
+        location: locationInput.value,
+        image: ''
+      })
+    }
+  ).then(res => {
     console.log('Data was sent to server', res);
     updateUI();
   });

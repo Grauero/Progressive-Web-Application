@@ -4,8 +4,8 @@ importScripts('/src/js/idb.js');
 importScripts('/src/js/utility.js');
 
 // update constants when cached assets get changed
-const CACHE_STATIC_NAME = 'static-v4';
-const CACHE_DYNAMIC_NAME = 'dynamic-v4';
+const CACHE_STATIC_NAME = 'static-v3';
+const CACHE_DYNAMIC_NAME = 'dynamic-v3';
 const URL = 'https://progressive-web-app-a254b.firebaseio.com/posts.json';
 
 async function trimCache(cacheName, maxSize) {
@@ -118,23 +118,28 @@ self.addEventListener('sync', e => {
     e.waitUntil(
       readAllData('sync-posts').then(data => {
         for (let dataItem of data) {
-          fetch(URL, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: 'application/json'
-            },
-            body: JSON.stringify({
-              id: dataItem.id,
-              title: dataItem.title,
-              location: dataItem.location,
-              image: 'image'
-            })
-          })
+          fetch(
+            'https://us-central1-progressive-web-app-a254b.cloudfunctions.net/storePostData',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json'
+              },
+              body: JSON.stringify({
+                id: dataItem.id,
+                title: dataItem.title,
+                location: dataItem.location,
+                image: 'image'
+              })
+            }
+          )
             .then(res => {
               if (res.ok) {
                 // clear indexed DB
-                // deleteItemFromIDB('sync-posts', dataItem.id);
+                res
+                  .json()
+                  .then(data => deleteItemFromIDB('sync-posts', data.id));
               }
             })
             .catch(err => console.log('Error while synching data', err));
