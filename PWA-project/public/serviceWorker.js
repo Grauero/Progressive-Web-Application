@@ -137,9 +137,7 @@ self.addEventListener('sync', e => {
             .then(res => {
               if (res.ok) {
                 // clear indexed DB
-                res
-                  .json()
-                  .then(data => deleteItemFromIDB('sync-posts', data.id));
+                res.json().then(data => deleteItemFromIDB('sync-posts', data.id));
               }
             })
             .catch(err => console.log('Error while synching data', err));
@@ -147,4 +145,13 @@ self.addEventListener('sync', e => {
       })
     );
   }
+});
+
+self.addEventListener('notificationclick', e => {
+  const { action, notification } = e;
+
+  action === 'confirm'
+    ? console.log('Confirm was chosen')
+    : console.log('Another option was chosen', action);
+  notification.close();
 });
