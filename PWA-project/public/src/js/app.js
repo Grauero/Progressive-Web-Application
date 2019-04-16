@@ -36,7 +36,23 @@ function askForNotificationPermission() {
 }
 
 function displayConfirmNotification() {
-  new Notification('Successfully subscribed', {
-    body: 'You successfully subscribed to Notification service'
-  });
+  const notificationOptions = {
+    body: 'You successfully subscribed to Notification service',
+    icon: '/src/images/icons/app-icon-96x96.png',
+    image: '/src/images/sf-boat.jpg',
+    dir: 'ltr',
+    lang: 'en-US',
+    vibrate: [100, 50, 200], // vibration->pause->vibration-> ...
+    badge: '/src/images/icons/app-icon-96x96.png',
+    tag: 'confirm-notification',
+    renotify: true
+  };
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then(activeServiceWorker =>
+      activeServiceWorker.showNotification('Successfully subscribed', notificationOptions)
+    );
+  } else {
+    new Notification('Successfully subscribed', notificationOptions);
+  }
 }
